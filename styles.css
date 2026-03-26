@@ -1,0 +1,316 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Cairo", Arial, Helvetica, sans-serif;
+}
+
+:root {
+  /* Background */
+  --bg-color: #f9fafb;
+
+  /* Text */
+  --foreground: #111827;
+  --foreground-muted: #6b7280;
+
+  /* Card */
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+
+  /* Accent */
+  --accent-color: #2563eb;
+
+  /* Navbar */
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+
+  /* Toggle */
+  --toggle-bg: #f3f4f6;
+  --toggle-border: #d1d5db;
+  --toggle-hover: #e5e7eb;
+  --toggle-icon: #fbbf24;
+
+  /* Icons */
+  --icon-color-light: #2563eb;
+
+  /* Prayer states */
+  --active-prayer-bg: #e0f2fe;
+  --active-prayer-border: #2563eb;
+  --active-prayer-shadow: rgba(37, 99, 235, 0.2);
+
+  --prayer-hover: #f3f4f6;
+  --prayer-item-bg: #ffffff;
+  --prayer-item-border: #e5e7eb;
+}
+
+body.dark {
+  /* Background */
+  --bg-color: #0f172a;
+
+  /* Text */
+  --foreground: #f9fafb;
+  --foreground-muted: #9ca3af;
+
+  /* Card */
+  --card-bg: #1e293b;
+  --card-border: #334155;
+
+  /* Accent */
+  --accent-color: #3b82f6;
+
+  /* Navbar */
+  --nav-bg: #1e293b;
+  --nav-border: #334155;
+
+  /* Toggle */
+  --toggle-bg: #334155;
+  --toggle-border: #475569;
+  --toggle-hover: #475569;
+  --toggle-icon: #f9fafb;
+
+  /* Icons */
+  --icon-color-light: #3b82f6;
+
+  /* Prayer states */
+  --active-prayer-bg: #1d4ed8;
+  --active-prayer-border: #3b82f6;
+  --active-prayer-shadow: rgba(59, 130, 246, 0.3);
+
+  --prayer-hover: #334155;
+  --prayer-item-bg: #1e293b;
+  --prayer-item-border: #334155;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-color);
+  padding: 20px;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--toggle-bg);
+  border: 2px solid var(--toggle-border);
+  color: var(--toggle-icon);
+  z-index: 50;
+  transition: 0.3s ease-in-out;
+}
+
+.theme-toggle:hover {
+  background-color: var(--toggle-hover);
+}
+
+/* ---- Main Content ---- */
+
+.container {
+  /* min-width: 30vw; */
+  width: 100%;
+  display: flex;
+  /* flex-direction: column; */
+  gap: 20px;
+}
+
+.container>div {
+  flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .next-prayer-name {
+    font-size: 1.5rem;
+  }
+
+  .countdown {
+    font-size: 2.5rem;
+  }
+}
+
+/* Header */
+.header {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  backdrop-filter: Blur(10px);
+  color: var(--foreground);
+  border: 2px solid var(--card-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 10px;
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-color);
+  font-size: 0.8rem;
+}
+
+.location i {
+  font-size: 1.5rem;
+}
+
+.dates {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--foreground-muted);
+  font-size: 0.875rem;
+}
+
+.gregorian-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hijri-date {
+  color: var(--accent-color);
+  opacity: 0.8;
+}
+
+/* Next Prayer Card */
+.next-prayer-card {
+  backdrop-filter: blur(12px);
+  background-color: var(--card-bg);
+  color: var(--foreground);
+  border: 2px solid var(--card-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.next-prayer-card>div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.next-prayer-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-color);
+  opacity: 0.8;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.next-prayer-name {
+  font-size: 2rem;
+  color: var(--foreground);
+  text-align: center;
+}
+
+.countdown {
+  font-size: 3rem;
+  font-family: monospace;
+  font-weight: 700;
+  background: linear-gradient(to right, var(--accent-color), #334155);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Prayer Times Card */
+.prayer-times-card {
+  backdrop-filter: blur(12px);
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--card-border);
+}
+
+.card-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--accent-color);
+  font-size: 1.125rem;
+  letter-spacing: 0.025em;
+}
+
+.prayer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prayer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  background: var(--prayer-item-bg);
+  border: 1px solid var(--prayer-item-border);
+}
+
+.prayer-item:hover {
+  background: var(--prayer-hover);
+}
+
+.prayer-item.active {
+  background: var(--active-prayer-bg);
+  border: 2px solid var(--active-prayer-border);
+  box-shadow: 0 10px 15px -3px var(--active-prayer-shadow);
+}
+
+.prayer-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.prayer-item .icon {
+  color: var(--foreground-muted);
+}
+
+.prayer-item.active .icon {
+  color: var(--foreground);
+}
+
+.prayer-item span {
+  color: var(--foreground-muted);
+}
+
+.prayer-item.active span {
+  color: var(--foreground);
+}
+
+.prayer-time {
+  font-family: monospace;
+  font-size: 1.125rem;
+  color: var(--foreground-muted);
+}
+
+.prayer-item.active .prayer-time {
+  color: var(--foreground);
+  font-weight: 600;
+}

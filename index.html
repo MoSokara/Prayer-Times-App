@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prayer Times App</title>
+    <link rel="shortcut icon" href="icon.svg" type="image/svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="css/all.min.css" />
+    <script src="node_modules/axios/dist/axios.min.js"></script>
+  </head>
+  <body class="dark">
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="location">
+          <i class="fa-solid fa-location-dot"></i>
+          <h1>
+            <span id="city">Alexandria</span>, <span id="country">Egypt</span>
+          </h1>
+        </div>
+        <div class="dates">
+          <div class="gregorian-date">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span id="gregorianDate">weekVar, monthVar dayVar, yearVar</span>
+          </div>
+          <div class="hijri-date" id="hijriDate">
+            dayVar monthVar yearVar AH
+          </div>
+        </div>
+      </div>
+
+      <!-- Next Prayer Countdown -->
+      <div class="next-prayer-card">
+        <div class="next-prayer-label">
+          <i class="fa-regular fa-clock"></i>
+          <span>Next Prayer</span>
+        </div>
+        <h2 class="next-prayer-name" id="nextPrayerName">Fajr</h2>
+        <div class="countdown" id="countdown">00:00:00</div>
+      </div>
+
+      <!-- Prayer Times Card -->
+      <div class="prayer-times-card">
+        <h2 class="card-title">Prayer Times</h2>
+        <div class="prayer-list">
+          <!-- Fajr -->
+          <div class="prayer-item active" data-prayer="Fajr">
+            <div class="prayer-info">
+              <svg
+                class="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 2v8"></path>
+                <path d="m4.93 10.93 1.41 1.41"></path>
+                <path d="M2 18h2"></path>
+                <path d="M20 18h2"></path>
+                <path d="m19.07 10.93-1.41 1.41"></path>
+                <path d="M22 22H2"></path>
+                <path d="m8 6 4-4 4 4"></path>
+                <path d="M16 18a4 4 0 0 0-8 0"></path>
+              </svg>
+              <span>Fajr</span>
+            </div>
+            <span class="prayer-time" id="fajr">timeVar AM</span>
+          </div>
+
+          <!-- Dhuhr -->
+          <div class="prayer-item" data-prayer="Dhuhr">
+            <div class="prayer-info">
+              <svg
+                class="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2"></path>
+                <path d="M12 20v2"></path>
+                <path d="m4.93 4.93 1.41 1.41"></path>
+                <path d="m17.66 17.66 1.41 1.41"></path>
+                <path d="M2 12h2"></path>
+                <path d="M20 12h2"></path>
+                <path d="m6.34 17.66-1.41 1.41"></path>
+                <path d="m19.07 4.93-1.41 1.41"></path>
+              </svg>
+              <span>Dhuhr</span>
+            </div>
+            <span class="prayer-time" id="dhuhr">timeVar PM</span>
+          </div>
+
+          <!-- Asr -->
+          <div class="prayer-item" data-prayer="Asr">
+            <div class="prayer-info">
+              <svg
+                class="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2"></path>
+                <path d="M12 20v2"></path>
+                <path d="m4.93 4.93 1.41 1.41"></path>
+                <path d="m17.66 17.66 1.41 1.41"></path>
+                <path d="M2 12h2"></path>
+                <path d="M20 12h2"></path>
+                <path d="m6.34 17.66-1.41 1.41"></path>
+                <path d="m19.07 4.93-1.41 1.41"></path>
+              </svg>
+              <span>Asr</span>
+            </div>
+            <span class="prayer-time" id="asr">timeVar PM</span>
+          </div>
+
+          <!-- Maghrib -->
+          <div class="prayer-item" data-prayer="Maghrib">
+            <div class="prayer-info">
+              <svg
+                class="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 10V2"></path>
+                <path d="m4.93 10.93 1.41 1.41"></path>
+                <path d="M2 18h2"></path>
+                <path d="M20 18h2"></path>
+                <path d="m19.07 10.93-1.41 1.41"></path>
+                <path d="M22 22H2"></path>
+                <path d="m16 6-4 4-4-4"></path>
+                <path d="M16 18a4 4 0 0 0-8 0"></path>
+              </svg>
+              <span>Maghrib</span>
+            </div>
+            <span class="prayer-time" id="maghrib">timeVar PM</span>
+          </div>
+
+          <!-- Isha -->
+          <div class="prayer-item" data-prayer="Isha">
+            <div class="prayer-info" >
+              <svg
+                class="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+              </svg>
+              <span>Isha</span>
+            </div>
+            <span class="prayer-time" id="isha">timeVar PM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script type="module" src="api.js"></script>
+  </body>
+</html>
