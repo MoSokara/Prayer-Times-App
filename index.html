@@ -3,22 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ✅ FIX #1: Proper meta description for SEO (was missing entirely) -->
+    <meta
+      name="description"
+      content="Prayer Times App — automatic daily prayer times based on your location with real-time countdown to the next prayer."
+    />
+    <meta name="theme-color" content="#0f172a" id="themeColorMeta" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Prayer Times App" />
+    <meta
+      property="og:description"
+      content="Daily prayer times with real-time countdown — auto-detected for your location."
+    />
+    <meta property="og:type" content="website" />
+
     <title>Prayer Times App</title>
-    <link rel="shortcut icon" href="icon.svg" type="image/svg" />
+
+    <!--
+      ✅ FIX #2: favicon type was "image/svg" (invalid MIME).
+         Corrected to "image/svg+xml". Also replaced the missing
+         icon.svg file with an inline data-URI so it never 404s.
+    -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='85'>🕌</text></svg>"
+      type="image/svg+xml"
+    />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="css/all.min.css" />
-    <script src="node_modules/axios/dist/axios.min.js"></script>
+
+    <link rel="stylesheet" href="./styles.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    />
+
+    <!--
+      ✅ FIX #3 (CRITICAL — Deployment Killer): Removed
+         <script src="node_modules/axios/dist/axios.min.js">
+         node_modules is NEVER deployed to GitHub Pages / Netlify / Vercel.
+         Switched all HTTP calls to the native fetch() API in api.js,
+         eliminating the axios dependency entirely.
+    -->
   </head>
+
   <body class="dark">
+    <!-- ✅ NEW: Loading overlay shown while fetching location & times -->
+    <div
+      class="loading-overlay"
+      id="loadingOverlay"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Detecting your location…</p>
+    </div>
+
+    <!-- ✅ NEW: Error banner for graceful failure messaging -->
+    <div class="error-banner" id="errorBanner" hidden role="alert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span id="errorMessage"
+        >Something went wrong. Please refresh the page.</span
+      >
+    </div>
+
     <!-- Theme Toggle -->
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-      <i class="fa-solid fa-moon"></i>
+    <!--
+      ✅ FIX #4: Icon was reversed — in dark mode it showed a moon (the
+         current state), not a sun (the action to switch to light).
+         Corrected so the icon always represents the ACTION, not the state.
+         Dark mode → show sun (click to go light).
+         Light mode → show moon (click to go dark).
+    -->
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      aria-label="Switch to light mode"
+    >
+      <i class="fa-solid fa-sun"></i>
     </button>
 
     <!-- Main Content -->
@@ -26,180 +97,197 @@
       <!-- Header -->
       <div class="header">
         <div class="location">
-          <i class="fa-solid fa-location-dot"></i>
-          <h1>
-            <span id="city">Alexandria</span>, <span id="country">Egypt</span>
-          </h1>
+          <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+          <h1><span id="city">—</span>, <span id="country">—</span></h1>
         </div>
         <div class="dates">
           <div class="gregorian-date">
-            <i class="fa-solid fa-calendar-days"></i>
-            <span id="gregorianDate">weekVar, monthVar dayVar, yearVar</span>
+            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+            <!--
+              ✅ FIX #5: Removed fragile placeholder text ("weekVar, monthVar dayVar, yearVar")
+                 that relied on chained .replace() calls. The date is now set
+                 directly via textContent assignment in app.js — no brittle
+                 find-and-replace needed.
+            -->
+            <span id="gregorianDate">—</span>
           </div>
-          <div class="hijri-date" id="hijriDate">
-            dayVar monthVar yearVar AH
-          </div>
+          <div class="hijri-date" id="hijriDate">—</div>
         </div>
       </div>
 
       <!-- Next Prayer Countdown -->
-      <div class="next-prayer-card">
+      <div class="next-prayer-card" aria-label="Next prayer countdown">
         <div class="next-prayer-label">
-          <i class="fa-regular fa-clock"></i>
+          <i class="fa-regular fa-clock" aria-hidden="true"></i>
           <span>Next Prayer</span>
         </div>
-        <h2 class="next-prayer-name" id="nextPrayerName">Fajr</h2>
-        <div class="countdown" id="countdown">00:00:00</div>
+        <h2 class="next-prayer-name" id="nextPrayerName">—</h2>
+        <div class="countdown" id="countdown" aria-live="polite">00:00:00</div>
       </div>
 
       <!-- Prayer Times Card -->
       <div class="prayer-times-card">
         <h2 class="card-title">Prayer Times</h2>
-        <div class="prayer-list">
+        <div class="prayer-list" role="list">
           <!-- Fajr -->
-          <div class="prayer-item active" data-prayer="Fajr">
+          <div class="prayer-item" data-prayer="Fajr" role="listitem">
             <div class="prayer-info">
+              <!-- Dawn / sunrise SVG -->
               <svg
                 class="icon"
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path d="M12 2v8"></path>
-                <path d="m4.93 10.93 1.41 1.41"></path>
-                <path d="M2 18h2"></path>
-                <path d="M20 18h2"></path>
-                <path d="m19.07 10.93-1.41 1.41"></path>
-                <path d="M22 22H2"></path>
-                <path d="m8 6 4-4 4 4"></path>
-                <path d="M16 18a4 4 0 0 0-8 0"></path>
+                <path d="M12 2v8" />
+                <path d="m4.93 10.93 1.41 1.41" />
+                <path d="M2 18h2" />
+                <path d="M20 18h2" />
+                <path d="m19.07 10.93-1.41 1.41" />
+                <path d="M22 22H2" />
+                <path d="m8 6 4-4 4 4" />
+                <path d="M16 18a4 4 0 0 0-8 0" />
               </svg>
               <span>Fajr</span>
             </div>
-            <span class="prayer-time" id="fajr">timeVar AM</span>
+            <span class="prayer-time" id="fajr">—</span>
           </div>
 
           <!-- Dhuhr -->
-          <div class="prayer-item" data-prayer="Dhuhr">
+          <div class="prayer-item" data-prayer="Dhuhr" role="listitem">
             <div class="prayer-info">
+              <!-- Full sun SVG -->
               <svg
                 class="icon"
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <circle cx="12" cy="12" r="4"></circle>
-                <path d="M12 2v2"></path>
-                <path d="M12 20v2"></path>
-                <path d="m4.93 4.93 1.41 1.41"></path>
-                <path d="m17.66 17.66 1.41 1.41"></path>
-                <path d="M2 12h2"></path>
-                <path d="M20 12h2"></path>
-                <path d="m6.34 17.66-1.41 1.41"></path>
-                <path d="m19.07 4.93-1.41 1.41"></path>
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
               </svg>
               <span>Dhuhr</span>
             </div>
-            <span class="prayer-time" id="dhuhr">timeVar PM</span>
+            <span class="prayer-time" id="dhuhr">—</span>
           </div>
 
           <!-- Asr -->
-          <div class="prayer-item" data-prayer="Asr">
+          <div class="prayer-item" data-prayer="Asr" role="listitem">
             <div class="prayer-info">
+              <!-- Afternoon sun SVG -->
               <svg
                 class="icon"
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <circle cx="12" cy="12" r="4"></circle>
-                <path d="M12 2v2"></path>
-                <path d="M12 20v2"></path>
-                <path d="m4.93 4.93 1.41 1.41"></path>
-                <path d="m17.66 17.66 1.41 1.41"></path>
-                <path d="M2 12h2"></path>
-                <path d="M20 12h2"></path>
-                <path d="m6.34 17.66-1.41 1.41"></path>
-                <path d="m19.07 4.93-1.41 1.41"></path>
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 8v1" />
+                <path d="M12 15v1" />
+                <path d="m9.17 9.17-.71.71" />
+                <path d="m15.54 15.54-.71.71" />
+                <path d="M8 12H7" />
+                <path d="M17 12h-1" />
+                <path d="m9.17 14.83-.71-.71" />
+                <path d="m15.54 8.46-.71-.71" />
+                <path d="M3 20h18" />
               </svg>
               <span>Asr</span>
             </div>
-            <span class="prayer-time" id="asr">timeVar PM</span>
+            <span class="prayer-time" id="asr">—</span>
           </div>
 
           <!-- Maghrib -->
-          <div class="prayer-item" data-prayer="Maghrib">
+          <div class="prayer-item" data-prayer="Maghrib" role="listitem">
             <div class="prayer-info">
+              <!-- Sunset SVG -->
               <svg
                 class="icon"
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path d="M12 10V2"></path>
-                <path d="m4.93 10.93 1.41 1.41"></path>
-                <path d="M2 18h2"></path>
-                <path d="M20 18h2"></path>
-                <path d="m19.07 10.93-1.41 1.41"></path>
-                <path d="M22 22H2"></path>
-                <path d="m16 6-4 4-4-4"></path>
-                <path d="M16 18a4 4 0 0 0-8 0"></path>
+                <path d="M12 10V2" />
+                <path d="m4.93 10.93 1.41 1.41" />
+                <path d="M2 18h2" />
+                <path d="M20 18h2" />
+                <path d="m19.07 10.93-1.41 1.41" />
+                <path d="M22 22H2" />
+                <path d="m16 6-4 4-4-4" />
+                <path d="M16 18a4 4 0 0 0-8 0" />
               </svg>
               <span>Maghrib</span>
             </div>
-            <span class="prayer-time" id="maghrib">timeVar PM</span>
+            <span class="prayer-time" id="maghrib">—</span>
           </div>
 
           <!-- Isha -->
-          <div class="prayer-item" data-prayer="Isha">
-            <div class="prayer-info" >
+          <div class="prayer-item" data-prayer="Isha" role="listitem">
+            <div class="prayer-info">
+              <!-- Moon SVG -->
               <svg
                 class="icon"
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
               </svg>
               <span>Isha</span>
             </div>
-            <span class="prayer-time" id="isha">timeVar PM</span>
+            <span class="prayer-time" id="isha">—</span>
           </div>
         </div>
       </div>
     </div>
 
-    <script type="module" src="app.js"></script>
-    <script type="module" src="api.js"></script>
+    <!--
+      ✅ FIX #3 (cont.): Both scripts are type="module".
+         app.js is now the single entry point; api.js exports
+         pure functions that app.js imports. No circular imports.
+    -->
+    <script type="module" src="./app.js"></script>
   </body>
 </html>

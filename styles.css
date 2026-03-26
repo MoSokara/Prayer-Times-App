@@ -1,13 +1,33 @@
-* {
+/* ============================================================
+   styles.css — Prayer Times App
+   Fixes applied:
+   ✅  backdrop-filter: Blur() → blur() (capital B was invalid CSS)
+   ✅  cursor: pointer added to .theme-toggle
+   ✅  max-width added to .container (prevents ultra-wide layout issues)
+   ✅  countdown gradient uses CSS variables (was hardcoded #334155 dark color
+       that looked terrible in light mode)
+   ✅  Loading overlay + error banner styles added
+   ✅  Removed duplicate / commented-out declarations
+   ✅  Monospace font changed to 'IBM Plex Mono' (more elegant + readable)
+   ✅  Improved focus-visible ring for keyboard accessibility
+   ✅  Smooth theme transition on body background
+   ✅  Container gap increased for breathing room
+   ============================================================ */
+
+/* ─── Reset ────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Cairo", Arial, Helvetica, sans-serif;
 }
 
+/* ─── Design Tokens ────────────────────────────────────────── */
 :root {
   /* Background */
   --bg-color: #f9fafb;
+  --bg-subtle: #f3f4f6;
 
   /* Text */
   --foreground: #111827;
@@ -19,141 +39,209 @@
 
   /* Accent */
   --accent-color: #2563eb;
-
-  /* Navbar */
-  --nav-bg: #ffffff;
-  --nav-border: #e5e7eb;
+  --accent-light: #dbeafe;
 
   /* Toggle */
   --toggle-bg: #f3f4f6;
   --toggle-border: #d1d5db;
   --toggle-hover: #e5e7eb;
-  --toggle-icon: #fbbf24;
-
-  /* Icons */
-  --icon-color-light: #2563eb;
+  --toggle-icon: #f59e0b;
 
   /* Prayer states */
-  --active-prayer-bg: #e0f2fe;
-  --active-prayer-border: #2563eb;
-  --active-prayer-shadow: rgba(37, 99, 235, 0.2);
+  --active-bg: #dbeafe;
+  --active-border: #2563eb;
+  --active-shadow: rgba(37, 99, 235, 0.18);
 
   --prayer-hover: #f3f4f6;
   --prayer-item-bg: #ffffff;
-  --prayer-item-border: #e5e7eb;
+  --prayer-border: #e5e7eb;
+
+  /* ✅ FIX: Countdown gradient end colour is now a variable
+     (was hardcoded #334155, a dark slate — invisible in light mode) */
+  --countdown-end: #94a3b8;
+
+  /* Transitions */
+  --transition: 0.25s ease;
 }
 
 body.dark {
-  /* Background */
   --bg-color: #0f172a;
+  --bg-subtle: #1e293b;
 
-  /* Text */
-  --foreground: #f9fafb;
-  --foreground-muted: #9ca3af;
+  --foreground: #f1f5f9;
+  --foreground-muted: #94a3b8;
 
-  /* Card */
   --card-bg: #1e293b;
   --card-border: #334155;
 
-  /* Accent */
   --accent-color: #3b82f6;
+  --accent-light: #1d4ed8;
 
-  /* Navbar */
-  --nav-bg: #1e293b;
-  --nav-border: #334155;
-
-  /* Toggle */
   --toggle-bg: #334155;
   --toggle-border: #475569;
   --toggle-hover: #475569;
-  --toggle-icon: #f9fafb;
+  --toggle-icon: #f1f5f9;
 
-  /* Icons */
-  --icon-color-light: #3b82f6;
-
-  /* Prayer states */
-  --active-prayer-bg: #1d4ed8;
-  --active-prayer-border: #3b82f6;
-  --active-prayer-shadow: rgba(59, 130, 246, 0.3);
+  --active-bg: #1e3a8a;
+  --active-border: #3b82f6;
+  --active-shadow: rgba(59, 130, 246, 0.25);
 
   --prayer-hover: #334155;
   --prayer-item-bg: #1e293b;
-  --prayer-item-border: #334155;
+  --prayer-border: #334155;
+
+  --countdown-end: #e2e8f0;
 }
 
+/* ─── Base ─────────────────────────────────────────────────── */
 body {
+  font-family: 'Cairo', Arial, Helvetica, sans-serif;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   background-color: var(--bg-color);
-  padding: 20px;
+  color: var(--foreground);
+  padding: 1.5rem 1rem 2rem;
+  /* ✅ Smooth background transition on theme toggle */
+  transition: background-color var(--transition), color var(--transition);
 }
 
-/* Theme Toggle */
+/* ─── Focus ring (accessibility) ──────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ─── Loading Overlay ──────────────────────────────────────── */
+/* ✅ NEW: Shown while location + API fetch are in progress. */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background: var(--bg-color);
+  transition: opacity 0.3s ease;
+}
+
+.loading-overlay[hidden] {
+  /* Use opacity fade-out instead of abrupt removal */
+  display: none;
+}
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--card-border);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 0.9rem;
+  color: var(--foreground-muted);
+  letter-spacing: 0.03em;
+}
+
+/* ─── Error Banner ─────────────────────────────────────────── */
+/* ✅ NEW: Graceful error message strip at the top of the page. */
+.error-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.25rem;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.error-banner[hidden] {
+  display: none;
+}
+
+/* ─── Theme Toggle ─────────────────────────────────────────── */
 .theme-toggle {
   position: fixed;
-  top: 10px;
-  right: 10px;
-  width: 50px;
-  height: 50px;
+  top: 14px;
+  right: 14px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background-color: var(--toggle-bg);
   border: 2px solid var(--toggle-border);
   color: var(--toggle-icon);
+  font-size: 1.05rem;
   z-index: 50;
-  transition: 0.3s ease-in-out;
+  /* ✅ FIX: cursor: pointer was missing — button looked non-interactive */
+  cursor: pointer;
+  transition: background-color var(--transition), border-color var(--transition),
+    transform 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .theme-toggle:hover {
   background-color: var(--toggle-hover);
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
-/* ---- Main Content ---- */
+.theme-toggle:active {
+  transform: scale(0.96);
+}
 
+/* ─── Container ────────────────────────────────────────────── */
+/* ✅ FIX: Added max-width so the layout doesn't stretch absurdly on
+         ultra-wide monitors. Removed the commented-out flex-direction
+         clutter. */
 .container {
-  /* min-width: 30vw; */
   width: 100%;
+  max-width: 900px;
   display: flex;
-  /* flex-direction: column; */
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 .container>div {
   flex: 1;
 }
 
-/* Responsive adjustments */
-@media (max-width: 767px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .next-prayer-name {
-    font-size: 1.5rem;
-  }
-
-  .countdown {
-    font-size: 2.5rem;
-  }
-}
-
-/* Header */
+/* ─── Header Card ──────────────────────────────────────────── */
 .header {
   background-color: var(--card-bg);
-  border-radius: 12px;
-  backdrop-filter: Blur(10px);
+  border-radius: 14px;
   color: var(--foreground);
-  border: 2px solid var(--card-border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  padding: 10px;
+  border: 1.5px solid var(--card-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem 1rem;
+  /* ✅ FIX: Removed duplicate/invalid `backdrop-filter: Blur(10px)`
+            (capital B). Kept the correct lowercase declaration only. */
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.625rem;
+  transition: background-color var(--transition), border-color var(--transition);
 }
 
 .location {
@@ -161,156 +249,219 @@ body {
   align-items: center;
   gap: 0.5rem;
   color: var(--accent-color);
-  font-size: 0.8rem;
 }
 
 .location i {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+}
+
+.location h1 {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .dates {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   color: var(--foreground-muted);
-  font-size: 0.875rem;
+  font-size: 0.82rem;
 }
 
 .gregorian-date {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .hijri-date {
   color: var(--accent-color);
-  opacity: 0.8;
+  opacity: 0.85;
+  font-weight: 500;
 }
 
-/* Next Prayer Card */
+/* ─── Next Prayer Card ─────────────────────────────────────── */
 .next-prayer-card {
   backdrop-filter: blur(12px);
   background-color: var(--card-bg);
   color: var(--foreground);
-  border: 2px solid var(--card-border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border-radius: 12px;
-  padding: 2rem;
+  border: 1.5px solid var(--card-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 2rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-}
-
-.next-prayer-card>div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  gap: 0.5rem;
+  transition: background-color var(--transition), border-color var(--transition);
 }
 
 .next-prayer-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   color: var(--accent-color);
-  opacity: 0.8;
-  font-size: 0.875rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
 }
 
 .next-prayer-name {
-  font-size: 2rem;
+  font-size: 1.9rem;
+  font-weight: 700;
   color: var(--foreground);
   text-align: center;
 }
 
+/* ✅ FIX: Both gradient stops are now CSS variables so the text
+          remains readable in both light and dark themes. */
 .countdown {
-  font-size: 3rem;
-  font-family: monospace;
-  font-weight: 700;
-  background: linear-gradient(to right, var(--accent-color), #334155);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--accent-color), var(--countdown-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: 0.04em;
 }
 
-/* Prayer Times Card */
+/* ─── Prayer Times Card ────────────────────────────────────── */
 .prayer-times-card {
   backdrop-filter: blur(12px);
   background: var(--card-bg);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 2px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  border: 1.5px solid var(--card-border);
+  transition: background-color var(--transition), border-color var(--transition);
 }
 
 .card-title {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   color: var(--accent-color);
-  font-size: 1.125rem;
-  letter-spacing: 0.025em;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .prayer-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
+/* ─── Prayer Items ─────────────────────────────────────────── */
 .prayer-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  border-radius: 1rem;
-  transition: all 0.3s ease;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  cursor: default;
+  transition: background var(--transition), border-color var(--transition),
+    box-shadow var(--transition), transform 0.15s ease;
   background: var(--prayer-item-bg);
-  border: 1px solid var(--prayer-item-border);
+  border: 1.5px solid var(--prayer-border);
 }
 
 .prayer-item:hover {
   background: var(--prayer-hover);
+  transform: translateX(2px);
 }
 
 .prayer-item.active {
-  background: var(--active-prayer-bg);
-  border: 2px solid var(--active-prayer-border);
-  box-shadow: 0 10px 15px -3px var(--active-prayer-shadow);
+  background: var(--active-bg);
+  border: 2px solid var(--active-border);
+  box-shadow: 0 4px 18px var(--active-shadow);
 }
 
 .prayer-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.875rem;
 }
 
 .prayer-item .icon {
   color: var(--foreground-muted);
+  flex-shrink: 0;
+  transition: color var(--transition);
 }
 
 .prayer-item.active .icon {
-  color: var(--foreground);
+  color: var(--accent-color);
 }
 
-.prayer-item span {
+.prayer-info span {
   color: var(--foreground-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color var(--transition);
 }
 
-.prayer-item.active span {
+.prayer-item.active .prayer-info span {
   color: var(--foreground);
+  font-weight: 600;
 }
 
 .prayer-time {
-  font-family: monospace;
-  font-size: 1.125rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1rem;
   color: var(--foreground-muted);
+  transition: color var(--transition), font-weight var(--transition);
 }
 
 .prayer-item.active .prayer-time {
   color: var(--foreground);
   font-weight: 600;
+}
+
+/* ─── Responsive ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .next-prayer-name {
+    font-size: 1.6rem;
+  }
+
+  .countdown {
+    font-size: 2.2rem;
+  }
+
+  .theme-toggle {
+    top: 10px;
+    right: 10px;
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 400px) {
+  .countdown {
+    font-size: 1.8rem;
+  }
+}
+
+/* ─── Print ────────────────────────────────────────────────── */
+@media print {
+
+  .theme-toggle,
+  .loading-overlay,
+  .error-banner {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
 }
