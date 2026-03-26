@@ -1,19 +1,3 @@
-/* ============================================================
-   styles.css — Prayer Times App
-   Fixes applied:
-   ✅  backdrop-filter: Blur() → blur() (capital B was invalid CSS)
-   ✅  cursor: pointer added to .theme-toggle
-   ✅  max-width added to .container (prevents ultra-wide layout issues)
-   ✅  countdown gradient uses CSS variables (was hardcoded #334155 dark color
-       that looked terrible in light mode)
-   ✅  Loading overlay + error banner styles added
-   ✅  Removed duplicate / commented-out declarations
-   ✅  Monospace font changed to 'IBM Plex Mono' (more elegant + readable)
-   ✅  Improved focus-visible ring for keyboard accessibility
-   ✅  Smooth theme transition on body background
-   ✅  Container gap increased for breathing room
-   ============================================================ */
-
 /* ─── Reset ────────────────────────────────────────────────── */
 *,
 *::before,
@@ -116,7 +100,7 @@ body {
 }
 
 /* ─── Loading Overlay ──────────────────────────────────────── */
-/* ✅ NEW: Shown while location + API fetch are in progress. */
+/* Shown while location + API fetch are in progress. */
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -157,7 +141,6 @@ body {
 }
 
 /* ─── Error Banner ─────────────────────────────────────────── */
-/* ✅ NEW: Graceful error message strip at the top of the page. */
 .error-banner {
   position: fixed;
   top: 0;
@@ -191,7 +174,6 @@ body {
   color: var(--toggle-icon);
   font-size: 1.05rem;
   z-index: 50;
-  /* ✅ FIX: cursor: pointer was missing — button looked non-interactive */
   cursor: pointer;
   transition: background-color var(--transition), border-color var(--transition),
     transform 0.15s ease, box-shadow 0.15s ease;
@@ -211,9 +193,6 @@ body {
 }
 
 /* ─── Container ────────────────────────────────────────────── */
-/* ✅ FIX: Added max-width so the layout doesn't stretch absurdly on
-         ultra-wide monitors. Removed the commented-out flex-direction
-         clutter. */
 .container {
   width: 100%;
   max-width: 900px;
@@ -233,8 +212,6 @@ body {
   border: 1.5px solid var(--card-border);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   padding: 1.25rem 1rem;
-  /* ✅ FIX: Removed duplicate/invalid `backdrop-filter: Blur(10px)`
-            (capital B). Kept the correct lowercase declaration only. */
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -317,8 +294,6 @@ body {
   text-align: center;
 }
 
-/* ✅ FIX: Both gradient stops are now CSS variables so the text
-          remains readable in both light and dark themes. */
 .countdown {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 2.75rem;

@@ -3,8 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- ✅ FIX #1: Proper meta description for SEO (was missing entirely) -->
     <meta
       name="description"
       content="Prayer Times App — automatic daily prayer times based on your location with real-time countdown to the next prayer."
@@ -21,11 +19,6 @@
 
     <title>Prayer Times App</title>
 
-    <!--
-      ✅ FIX #2: favicon type was "image/svg" (invalid MIME).
-         Corrected to "image/svg+xml". Also replaced the missing
-         icon.svg file with an inline data-URI so it never 404s.
-    -->
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='85'>🕌</text></svg>"
@@ -46,18 +39,10 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
     />
-
-    <!--
-      ✅ FIX #3 (CRITICAL — Deployment Killer): Removed
-         <script src="node_modules/axios/dist/axios.min.js">
-         node_modules is NEVER deployed to GitHub Pages / Netlify / Vercel.
-         Switched all HTTP calls to the native fetch() API in api.js,
-         eliminating the axios dependency entirely.
-    -->
   </head>
 
   <body class="dark">
-    <!-- ✅ NEW: Loading overlay shown while fetching location & times -->
+    <!-- Loading Overlay -->
     <div
       class="loading-overlay"
       id="loadingOverlay"
@@ -68,7 +53,6 @@
       <p class="loading-text">Detecting your location…</p>
     </div>
 
-    <!-- ✅ NEW: Error banner for graceful failure messaging -->
     <div class="error-banner" id="errorBanner" hidden role="alert">
       <i class="fa-solid fa-triangle-exclamation"></i>
       <span id="errorMessage"
@@ -77,13 +61,6 @@
     </div>
 
     <!-- Theme Toggle -->
-    <!--
-      ✅ FIX #4: Icon was reversed — in dark mode it showed a moon (the
-         current state), not a sun (the action to switch to light).
-         Corrected so the icon always represents the ACTION, not the state.
-         Dark mode → show sun (click to go light).
-         Light mode → show moon (click to go dark).
-    -->
     <button
       class="theme-toggle"
       id="themeToggle"
@@ -103,12 +80,6 @@
         <div class="dates">
           <div class="gregorian-date">
             <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-            <!--
-              ✅ FIX #5: Removed fragile placeholder text ("weekVar, monthVar dayVar, yearVar")
-                 that relied on chained .replace() calls. The date is now set
-                 directly via textContent assignment in app.js — no brittle
-                 find-and-replace needed.
-            -->
             <span id="gregorianDate">—</span>
           </div>
           <div class="hijri-date" id="hijriDate">—</div>
@@ -282,12 +253,6 @@
         </div>
       </div>
     </div>
-
-    <!--
-      ✅ FIX #3 (cont.): Both scripts are type="module".
-         app.js is now the single entry point; api.js exports
-         pure functions that app.js imports. No circular imports.
-    -->
     <script type="module" src="./app.js"></script>
   </body>
 </html>

@@ -1,22 +1,3 @@
-/**
- * app.js — Main entry point & DOM orchestrator
- *
- * This file is the single <script type="module"> loaded by index.html.
- * It imports pure API helpers from api.js and owns all DOM interactions.
- *
- * Key fixes applied here:
- *  ✅ FIX #5  — Removed fragile chained .replace() for date placeholders
- *  ✅ FIX #6  — setInterval leak fixed (store handle, clear before re-start)
- *  ✅ FIX #7  — Theme icon now shows the ACTION (sun in dark, moon in light)
- *  ✅ FIX #8  — Time strings sanitised before parsing (handles "04:45 (EET)")
- *  ✅ FIX #9  — Theme preference persisted to / restored from localStorage
- *  ✅ NEW     — IP geolocation fallback when GPS is denied
- *  ✅ NEW     — localStorage cache for today's prayer data (no redundant API calls)
- *  ✅ NEW     — Loading overlay & error banner driven from here
- *  ✅ NEW     — Immediate first countdown tick (no 1 s blank delay)
- *  ✅ REMOVED — console.log(city, country) debug leak
- */
-
 import {
   requestGeolocation,
   getLocationFromCoords,
@@ -35,7 +16,7 @@ const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const CACHE_KEY = "prayerTimesCache";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DOM References  (gathered once at module load)
+// DOM References
 // ─────────────────────────────────────────────────────────────────────────────
 
 const themeToggle = document.getElementById("themeToggle");
@@ -59,31 +40,18 @@ const prayerTimeEls = {
   Isha: document.getElementById("isha"),
 };
 
-/** All .prayer-item nodes for active-state toggling. */
 const prayerItems = document.querySelectorAll(".prayer-item");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module-level state
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * ✅ FIX #6: Store the interval ID so it can be cleared before
- *    starting a new one. Without this, calling getDataToDOM() twice
- *    (e.g. after a manual refresh) stacks multiple intervals that all
- *    write to the same DOM nodes simultaneously.
- */
 let countdownInterval = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Theme
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * ✅ FIX #7: Apply a theme and update the toggle icon to show
- *    the OPPOSITE state (i.e. what clicking will switch TO).
- *  - Dark  mode active → show ☀ sun  (click to go light)
- *  - Light mode active → show 🌙 moon (click to go dark)
- */
 function applyTheme(isDark) {
   document.body.classList.toggle("dark", isDark);
 
@@ -117,15 +85,10 @@ themeToggle.addEventListener("click", () => {
 // Cache helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Today's date in YYYY-MM-DD (locale-stable, avoids timezone drift). */
 function todayKey() {
-  return new Date().toLocaleDateString("en-CA"); // always YYYY-MM-DD
+  return new Date().toLocaleDateString("en-CA");
 }
 
-/**
- * ✅ NEW: Return today's cached API payload for this city/country,
- *    or null if no valid cache exists.
- */
 function getCached(city, country) {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -138,7 +101,6 @@ function getCached(city, country) {
   return null;
 }
 
-/** ✅ NEW: Persist today's API response keyed on city + country + date. */
 function setCache(city, country, data) {
   try {
     localStorage.setItem(
@@ -154,14 +116,6 @@ function setCache(city, country, data) {
 // Utilities
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * ✅ FIX #8: The AlAdhan API sometimes appends a timezone label to the
- *    time string, e.g. "04:45 (EET)". The previous code called
- *    time24.split(":") directly which yielded ["04", "45 (EET)"] and
- *    caused parseInt("45 (EET)") → 45 (coincidentally OK), but split on
- *    the second colon also breaks the minutes extraction for other locales.
- *    Now we strip everything after the first space before parsing.
- */
 function parseTime(rawTime) {
   // Strip timezone annotation, e.g. "04:45 (EET)" → "04:45"
   const clean = rawTime.split(" ")[0];
@@ -189,12 +143,6 @@ function renderLocation(city, country) {
   countryEl.textContent = country;
 }
 
-/**
- * ✅ FIX #5: Direct textContent assignment instead of chained
- *    .replace("weekVar", ...).replace("dayVar", ...) etc.
- *    The old approach was fragile: if any placeholder was missing or
- *    duplicated, the replace chain silently produced wrong output.
- */
 function renderDates(data) {
   const { gregorian, hijri } = data.date;
   gregorianDateEl.textContent = `${gregorian.weekday.en}, ${gregorian.month.en} ${gregorian.day}, ${gregorian.year}`;
@@ -212,10 +160,6 @@ function renderPrayerTimes(timings) {
 // Next Prayer & Countdown
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Determine which of the five canonical prayers comes next.
- * If all have passed for today, wraps to tomorrow's Fajr.
- */
 function getNextPrayer(timings) {
   const now = new Date();
 
@@ -241,11 +185,6 @@ function highlightActivePrayer(name) {
   });
 }
 
-/**
- * ✅ FIX #6: Store the interval handle and clear any previous one.
- *    Also executes one immediate tick so the UI is populated at t=0
- *    rather than after a 1-second blank period.
- */
 function startCountdown(timings) {
   if (countdownInterval) clearInterval(countdownInterval);
 
@@ -301,9 +240,6 @@ async function init() {
       city = loc.city;
       country = loc.country;
     } catch {
-      // ✅ NEW: Graceful fallback to IP-based location when the user
-      //    denies browser geolocation permission or it times out.
-      //    The README listed this as a feature, but it was never built.
       const loc = await getLocationFromIP();
       city = loc.city;
       country = loc.country;
@@ -315,8 +251,6 @@ async function init() {
     let data = getCached(city, country);
 
     if (!data) {
-      // ✅ NEW: Cache miss — fetch from API, then persist for the rest
-      //    of the day so repeated page loads don't hammer the free API.
       data = await fetchPrayerTimes(city, country);
       setCache(city, country, data);
     }
@@ -329,7 +263,6 @@ async function init() {
     showError(
       "Could not load prayer times. Please check your connection and refresh.",
     );
-    // Keep the error in the console for developers; never expose it in the UI.
     console.error("[PrayerTimesApp]", err);
   } finally {
     showLoading(false);
