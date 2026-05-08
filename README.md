@@ -12,7 +12,7 @@
 
 ## 🚀 Live Demo
 
-👉 https://mosokara.github.io/Prayer-Times-API/
+👉 https://mosokara.github.io/Prayer-Times-App/
 
 ---
 
